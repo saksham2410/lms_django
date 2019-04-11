@@ -6,9 +6,8 @@ class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     roll_number = models.CharField(max_length=10, unique=True)
     dob = models.DateField()
-    avatar = models.ImageField(upload_to='avatar')
+    avatar = models.ImageField(upload_to='avatar',null=True)
     department = models.ForeignKey('department.Department', on_delete=models.CASCADE)
-
     def __str__(self):
         return '{} ({})'.format(self.name, self.roll_number)
 
@@ -19,7 +18,6 @@ class StudentProfile(models.Model):
 class InstructorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.ForeignKey('department.Department', on_delete=models.CASCADE)
-
     def __str__(self):
         return '{}'.format(self.name)
 
