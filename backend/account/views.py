@@ -5,7 +5,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
@@ -15,7 +14,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from account.serializers import StudentProfileSerializer, InstructorProfileSerializer
 from account.models import StudentProfile, InstructorProfile
-
 
 
 class ProfileCreateAPIView(APIView):
@@ -78,31 +76,31 @@ class LoginAPIView(APIView):
     # @method_decorator(csrf_protect)
     @method_decorator(never_cache)
     def post(self, request, *args, **kwargs):
-        user = authenticate(request=request, username=request.data.get('username', ''), password=request.data.get('password', ''))
+        user = authenticate(request=request, username=request.data.get(
+            'username', ''), password=request.data.get('password', ''))
         if user:
             auth_login(request, user)
             return Response({"data": self.get_profile_data(request, user) or "success"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": ["invalid credentials"]}, status=status.HTTP_400_BAD_REQUEST)
-  
+
     @staticmethod
     def get_profile_data(request, user):
-        try:
-            student_profile = StudentProfile.objects.get(user=user)
-            return {'type': 'student-profile', 'profile': StudentProfileSerializer(instance=student_profile, context={'request': request}).data}
-        except StudentProfile.DoesNotExist:
-            return {}
         try:
             instructor_profile = InstructorProfile.objects.get(user=user)
             return {'type': 'instructor-profile', 'profile': InstructorProfileSerializer(instance=instructor_profile, context={'request': request}).data}
         except InstructorProfile.DoesNotExist:
-            return {}
+            try:
+                student_profile = StudentProfile.objects.get(user=user)
+                return {'type': 'student-profile', 'profile': StudentProfileSerializer(instance=student_profile, context={'request': request}).data}
+            except StudentProfile.DoesNotExist:
+                return {}
 
 
 class LogoutAPIView(APIView):
     http_method_names = ['get', 'options', 'head']
     permission_classes = (AllowAny,)
-    
+
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
